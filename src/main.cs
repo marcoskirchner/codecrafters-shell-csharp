@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 
@@ -54,6 +55,10 @@ bool ExecuteBuiltIn(string[] parts)
                 {
                     Console.WriteLine($"{cmd} is a shell builtin");
                 }
+                else if (SearchPath(cmd, out string? foundAt))
+                {
+                    Console.WriteLine($"{cmd} is {Path.Combine(foundAt, cmd)}");
+                }
                 else
                 {
                     Console.WriteLine($"{cmd}: not found");
@@ -68,6 +73,26 @@ bool ExecuteBuiltIn(string[] parts)
     {
         return false;
     }
+}
+
+bool SearchPath(string cmd, [NotNullWhen(true)] out string? foundAt)
+{
+    string? pathEnvVar = Environment.GetEnvironmentVariable("PATH");
+    if (pathEnvVar != null)
+    {
+        string[] parts = pathEnvVar.Split(':');
+        foreach (string part in parts)
+        {
+            if (File.Exists(Path.Combine(part, cmd)))
+            {
+                foundAt = part;
+                return true;
+            }
+        }
+    }
+
+    foundAt = null;
+    return false;
 };
 
 
