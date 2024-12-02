@@ -1,3 +1,8 @@
 Console.Write("$ ");
-string? command = Console.ReadLine();
-Console.WriteLine($"{command}: command not found");
+
+string? command;
+do
+{
+    command = Console.ReadLine();
+    Console.WriteLine($"{command}: command not found");
+} while (command != "exit");
