@@ -1,2 +1,3 @@
 Console.Write("$ ");
-Console.ReadLine();
+string? command = Console.ReadLine();
+Console.WriteLine($"{command}: command not found");
