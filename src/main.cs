@@ -3,7 +3,7 @@ using System.Globalization;
 
 int exitReturnCode = 0;
 bool shouldExit = false;
-List<string> builtins = ["exit", "echo"];
+List<string> builtins = ["exit", "echo", "type"];
 
 while (!shouldExit)
 {
@@ -43,6 +43,21 @@ bool ExecuteBuiltIn(string[] parts)
                     Console.Write(parts[i]);
                 }
                 Console.WriteLine();
+                break;
+            case "type":
+                string? cmd = parts.Length > 1 ? parts[1] : null;
+                if (cmd == null)
+                {
+                    break;
+                }
+                if (builtins.Contains(cmd))
+                {
+                    Console.WriteLine($"{cmd} is a shell builtin");
+                }
+                else
+                {
+                    Console.WriteLine($"{cmd}: not found");
+                }
                 break;
             default:
                 throw new ShellException($"Unknown builtin {parts[0]}");
