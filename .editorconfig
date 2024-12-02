@@ -1,0 +1,12 @@
+﻿[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+dotnet_analyzer_diagnostic.severity = warning
+
+# IDE0130: Namespace does not match folder structure
+dotnet_style_namespace_match_folder = false
+
+# IDE0160: Convert to block scoped namespace
+csharp_style_namespace_declarations = file_scoped
