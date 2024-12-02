@@ -3,7 +3,7 @@ using System.Globalization;
 
 int exitReturnCode = 0;
 bool shouldExit = false;
-List<string> builtins = ["exit"];
+List<string> builtins = ["exit", "echo"];
 
 while (!shouldExit)
 {
@@ -27,8 +27,22 @@ bool ExecuteBuiltIn(string[] parts)
         switch (parts[0])
         {
             case "exit":
-                exitReturnCode = int.Parse(parts[1], CultureInfo.InvariantCulture);
+                if (parts.Length > 1)
+                {
+                    exitReturnCode = int.Parse(parts[1], CultureInfo.InvariantCulture);
+                }
                 shouldExit = true;
+                break;
+            case "echo":
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    if (i > 1)
+                    {
+                        Console.Write(' ');
+                    }
+                    Console.Write(parts[i]);
+                }
+                Console.WriteLine();
                 break;
             default:
                 throw new ShellException($"Unknown builtin {parts[0]}");
