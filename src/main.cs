@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -12,9 +13,9 @@ while (!shouldExit)
     string command = Console.ReadLine()!;
 
     string[] parts = command.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-    if (!ExecuteBuiltIn(parts))
+    if (!ExecuteBuiltIn(parts) && !ExecuteProgram(parts))
     {
-        Console.WriteLine($"{command}: command not found");
+        Console.WriteLine($"{parts[0]}: command not found");
     }
 }
 
@@ -73,6 +74,29 @@ bool ExecuteBuiltIn(string[] parts)
     {
         return false;
     }
+}
+
+bool ExecuteProgram(string[] parts)
+{
+    string cmd = parts[0];
+    if (SearchPath(cmd, out string? foundAt))
+    {
+        string fullCmd = Path.Combine(foundAt, cmd);
+        ProcessStartInfo processStartInfo = new(fullCmd, parts.Skip(1))
+        {
+            RedirectStandardOutput = true
+        };
+        Process? p = Process.Start(processStartInfo);
+        if (p != null)
+        {
+            p.WaitForExit();
+            string output = p.StandardOutput.ReadToEnd();
+            Console.Write(output);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool SearchPath(string cmd, [NotNullWhen(true)] out string? foundAt)
