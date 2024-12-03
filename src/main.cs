@@ -82,11 +82,7 @@ bool ExecuteBuiltIn(string[] parts)
                     : Path.Combine(Environment.GetEnvironmentVariable("PWD")!, dirName);
                 if (Directory.Exists(fullName))
                 {
-                    fullName = new DirectoryInfo(fullName).FullName;
-                    if (fullName.EndsWith(Path.DirectorySeparatorChar))
-                    {
-                        fullName = fullName[..^1];
-                    }
+                    fullName = new DirectoryInfo(fullName).FullName.TrimEnd(Path.DirectorySeparatorChar);
                     Environment.SetEnvironmentVariable("PWD", fullName);
                 }
                 else
