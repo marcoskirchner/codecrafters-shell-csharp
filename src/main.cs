@@ -5,7 +5,7 @@ using System.Globalization;
 
 int exitReturnCode = 0;
 bool shouldExit = false;
-List<string> builtins = ["exit", "echo", "type", "pwd"];
+List<string> builtins = ["exit", "echo", "type", "pwd", "cd"];
 
 while (!shouldExit)
 {
@@ -68,6 +68,22 @@ bool ExecuteBuiltIn(string[] parts)
                 break;
             case "pwd":
                 Console.WriteLine(Environment.GetEnvironmentVariable("PWD"));
+                break;
+            case "cd":
+                string? dirName = parts.Length > 1 ? parts[1] : null;
+                if (dirName == null)
+                {
+                    break;
+                }
+
+                if (Directory.Exists(dirName))
+                {
+                    Environment.SetEnvironmentVariable("PWD", dirName);
+                }
+                else
+                {
+                    Console.WriteLine($"cd: {dirName}: No such file or directory");
+                }
                 break;
             default:
                 throw new ShellException($"Unknown builtin {builtInName}");
