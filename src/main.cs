@@ -47,6 +47,13 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
                     _ = sb.Append(command[0..pos]);
                     command = command[(pos + 1)..];
                     break;
+                case '"':
+                    _ = sb.Append(command[0..pos]);
+                    command = command[(pos + 1)..];
+                    pos = command.IndexOf('"');
+                    _ = sb.Append(command[0..pos]);
+                    command = command[(pos + 1)..];
+                    break;
                 default:
                     throw new ShellException($"Unhandled case `{command[pos]}`");
             }
