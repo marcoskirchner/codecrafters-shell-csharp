@@ -29,7 +29,7 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
     int pos = 0;
     while (pos != -1)
     {
-        pos = command.IndexOfAny(' ', '"', '\'');
+        pos = command.IndexOfAny([' ', '"', '\'', '\\']);
         if (pos >= 0)
         {
             switch (command[pos])
@@ -41,18 +41,18 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
                     _ = sb.Clear();
                     break;
                 case '\'':
-                    _ = sb.Append(command[0..pos]);
-                    command = command[(pos + 1)..];
+                    ConsumeInputSkipChar(ref command);
                     pos = command.IndexOf('\'');
-                    _ = sb.Append(command[0..pos]);
-                    command = command[(pos + 1)..];
+                    ConsumeInputSkipChar(ref command);
                     break;
                 case '"':
-                    _ = sb.Append(command[0..pos]);
-                    command = command[(pos + 1)..];
+                    ConsumeInputSkipChar(ref command);
                     pos = command.IndexOf('"');
-                    _ = sb.Append(command[0..pos]);
-                    command = command[(pos + 1)..];
+                    ConsumeInputSkipChar(ref command);
+                    break;
+                case '\\':
+                    ConsumeInputSkipChar(ref command);
+                    ConsumeChar(ref command);
                     break;
                 default:
                     throw new ShellException($"Unhandled case `{command[pos]}`");
@@ -63,6 +63,19 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
     parts.Add(sb.ToString());
 
     return [.. parts];
+
+
+    void ConsumeInputSkipChar(ref ReadOnlySpan<char> command)
+    {
+        _ = sb.Append(command[0..pos]);
+        command = command[(pos + 1)..];
+    }
+
+    void ConsumeChar(ref ReadOnlySpan<char> command)
+    {
+        _ = sb.Append(command[0]);
+        command = command[1..];
+    }
 }
 
 return exitReturnCode;
