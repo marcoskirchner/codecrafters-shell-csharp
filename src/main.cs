@@ -76,9 +76,15 @@ bool ExecuteBuiltIn(string[] parts)
                     break;
                 }
 
-                if (Directory.Exists(dirName))
+                string fullName = Path.Combine(Environment.GetEnvironmentVariable("PWD")!, dirName);
+                if (Directory.Exists(fullName))
                 {
-                    Environment.SetEnvironmentVariable("PWD", dirName);
+                    fullName = new DirectoryInfo(fullName).FullName;
+                    if (fullName.EndsWith(Path.DirectorySeparatorChar))
+                    {
+                        fullName = fullName[..^1];
+                    }
+                    Environment.SetEnvironmentVariable("PWD", fullName);
                 }
                 else
                 {
@@ -124,7 +130,7 @@ bool SearchPath(string cmd, [NotNullWhen(true)] out string? foundAt)
     string? pathEnvVar = Environment.GetEnvironmentVariable("PATH");
     if (pathEnvVar != null)
     {
-        string[] parts = pathEnvVar.Split(':');
+        string[] parts = pathEnvVar.Split(Path.PathSeparator);
         foreach (string part in parts)
         {
             if (File.Exists(Path.Combine(part, cmd)))
