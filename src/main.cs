@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text;
 
 
 int exitReturnCode = 0;
@@ -12,11 +13,49 @@ while (!shouldExit)
     Console.Write("$ ");
     string command = Console.ReadLine()!;
 
-    string[] parts = command.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    string[] parts = ParseAndSplitCommandLine(command);
     if (!ExecuteBuiltIn(parts) && !ExecuteProgram(parts))
     {
         Console.WriteLine($"{parts[0]}: command not found");
     }
+}
+
+string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
+{
+    command = command.Trim();
+    List<string> parts = [];
+    StringBuilder sb = new();
+
+    int pos = 0;
+    while (pos != -1)
+    {
+        pos = command.IndexOfAny(' ', '"', '\'');
+        if (pos >= 0)
+        {
+            switch (command[pos])
+            {
+                case ' ':
+                    _ = sb.Append(command[0..pos]);
+                    command = command[pos..].TrimStart();
+                    parts.Add(sb.ToString());
+                    _ = sb.Clear();
+                    break;
+                case '\'':
+                    _ = sb.Append(command[0..pos]);
+                    command = command[(pos + 1)..];
+                    pos = command.IndexOf('\'');
+                    _ = sb.Append(command[0..pos]);
+                    command = command[(pos + 1)..];
+                    break;
+                default:
+                    throw new ShellException($"Unhandled case `{command[pos]}`");
+            }
+        }
+    }
+    _ = sb.Append(command);
+    parts.Add(sb.ToString());
+
+    return [.. parts];
 }
 
 return exitReturnCode;
