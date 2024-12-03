@@ -5,7 +5,7 @@ using System.Globalization;
 
 int exitReturnCode = 0;
 bool shouldExit = false;
-List<string> builtins = ["exit", "echo", "type"];
+List<string> builtins = ["exit", "echo", "type", "pwd"];
 
 while (!shouldExit)
 {
@@ -24,9 +24,10 @@ return exitReturnCode;
 
 bool ExecuteBuiltIn(string[] parts)
 {
-    if (builtins.Contains(parts[0]))
+    string builtInName = parts[0];
+    if (builtins.Contains(builtInName))
     {
-        switch (parts[0])
+        switch (builtInName)
         {
             case "exit":
                 if (parts.Length > 1)
@@ -47,26 +48,29 @@ bool ExecuteBuiltIn(string[] parts)
                 Console.WriteLine();
                 break;
             case "type":
-                string? cmd = parts.Length > 1 ? parts[1] : null;
-                if (cmd == null)
+                string? cmdName = parts.Length > 1 ? parts[1] : null;
+                if (cmdName == null)
                 {
                     break;
                 }
-                if (builtins.Contains(cmd))
+                if (builtins.Contains(cmdName))
                 {
-                    Console.WriteLine($"{cmd} is a shell builtin");
+                    Console.WriteLine($"{cmdName} is a shell builtin");
                 }
-                else if (SearchPath(cmd, out string? foundAt))
+                else if (SearchPath(cmdName, out string? foundAt))
                 {
-                    Console.WriteLine($"{cmd} is {Path.Combine(foundAt, cmd)}");
+                    Console.WriteLine($"{cmdName} is {Path.Combine(foundAt, cmdName)}");
                 }
                 else
                 {
-                    Console.WriteLine($"{cmd}: not found");
+                    Console.WriteLine($"{cmdName}: not found");
                 }
                 break;
+            case "pwd":
+                Console.WriteLine(Environment.GetEnvironmentVariable("PWD"));
+                break;
             default:
-                throw new ShellException($"Unknown builtin {parts[0]}");
+                throw new ShellException($"Unknown builtin {builtInName}");
         }
         return true;
     }
