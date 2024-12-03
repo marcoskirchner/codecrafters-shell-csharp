@@ -76,7 +76,10 @@ bool ExecuteBuiltIn(string[] parts)
                     break;
                 }
 
-                string fullName = Path.Combine(Environment.GetEnvironmentVariable("PWD")!, dirName);
+                string fullName;
+                fullName = dirName == "~"
+                    ? Environment.GetEnvironmentVariable("HOME")!
+                    : Path.Combine(Environment.GetEnvironmentVariable("PWD")!, dirName);
                 if (Directory.Exists(fullName))
                 {
                     fullName = new DirectoryInfo(fullName).FullName;
