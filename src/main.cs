@@ -41,17 +41,30 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
                     _ = sb.Clear();
                     break;
                 case '\'':
-                    ConsumeInputSkipChar(ref command);
+                    ConsumeInput(ref command, false);
                     pos = command.IndexOf('\'');
-                    ConsumeInputSkipChar(ref command);
+                    ConsumeInput(ref command, false);
                     break;
                 case '"':
-                    ConsumeInputSkipChar(ref command);
-                    pos = command.IndexOf('"');
-                    ConsumeInputSkipChar(ref command);
+                    ConsumeInput(ref command, false);
+                    pos = command.IndexOfAny('"', '\\');
+                    while (command[pos] == '\\')
+                    {
+                        if (command[pos + 1] is '\\' or '\"')
+                        {
+                            ConsumeInput(ref command, false);
+                            ConsumeChar(ref command);
+                        }
+                        else
+                        {
+                            ConsumeInput(ref command, true);
+                        }
+                        pos = command.IndexOfAny('"', '\\');
+                    }
+                    ConsumeInput(ref command, false);
                     break;
                 case '\\':
-                    ConsumeInputSkipChar(ref command);
+                    ConsumeInput(ref command, false);
                     ConsumeChar(ref command);
                     break;
                 default:
@@ -65,9 +78,13 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
     return [.. parts];
 
 
-    void ConsumeInputSkipChar(ref ReadOnlySpan<char> command)
+    void ConsumeInput(ref ReadOnlySpan<char> command, bool includeCurrentPos)
     {
         _ = sb.Append(command[0..pos]);
+        if (includeCurrentPos)
+        {
+            _ = sb.Append(command[pos]);
+        }
         command = command[(pos + 1)..];
     }
 
