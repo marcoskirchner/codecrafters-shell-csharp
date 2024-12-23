@@ -7,20 +7,68 @@ using System.Text;
 int exitReturnCode = 0;
 bool shouldExit = false;
 List<string> builtins = ["exit", "echo", "type", "pwd", "cd"];
+TextWriter consoleOut = Console.Out, consoleError = Console.Error;
 
 while (!shouldExit)
 {
     Console.Write("$ ");
     string command = Console.ReadLine()!;
 
-    string[] parts = ParseAndSplitCommandLine(command);
+    List<string> parts = ParseAndSplitCommandLine(command);
+    RedirectConsoleIfRequested(parts);
     if (!ExecuteBuiltIn(parts) && !ExecuteProgram(parts))
     {
-        Console.WriteLine($"{parts[0]}: command not found");
+        Console.Error.WriteLine($"{parts[0]}: command not found");
+    }
+    RestoreConsoleRedirection();
+}
+
+void RedirectConsoleIfRequested(List<string> parts)
+{
+    for (int i = 0; i < parts.Count - 1; i++)
+    {
+        switch (parts[i])
+        {
+            case ">":
+            case "1>":
+                Console.SetOut(new StreamWriter(parts[i + 1], append: false));
+                parts[i] = parts[i + 1] = string.Empty;
+                break;
+            case ">>":
+            case "1>>":
+                Console.SetOut(new StreamWriter(parts[i + 1], append: true));
+                parts[i] = parts[i + 1] = string.Empty;
+                break;
+            case "2>":
+                Console.SetError(new StreamWriter(parts[i + 1], append: false));
+                parts[i] = parts[i + 1] = string.Empty;
+                break;
+            case "2>>":
+                Console.SetError(new StreamWriter(parts[i + 1], append: true));
+                parts[i] = parts[i + 1] = string.Empty;
+                break;
+            default:
+                break;
+        }
+    }
+    _ = parts.RemoveAll(string.IsNullOrEmpty);
+}
+
+void RestoreConsoleRedirection()
+{
+    if (Console.Out != consoleOut)
+    {
+        Console.Out.Dispose();
+        Console.SetOut(consoleOut);
+    }
+    if (Console.Error != consoleError)
+    {
+        Console.Error.Dispose();
+        Console.SetError(consoleError);
     }
 }
 
-string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
+List<string> ParseAndSplitCommandLine(ReadOnlySpan<char> command)
 {
     command = command.Trim();
     List<string> parts = [];
@@ -75,7 +123,7 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
     _ = sb.Append(command);
     parts.Add(sb.ToString());
 
-    return [.. parts];
+    return parts;
 
 
     void ConsumeInput(ref ReadOnlySpan<char> command, bool includeCurrentPos)
@@ -98,7 +146,7 @@ string[] ParseAndSplitCommandLine(ReadOnlySpan<char> command)
 return exitReturnCode;
 
 
-bool ExecuteBuiltIn(string[] parts)
+bool ExecuteBuiltIn(List<string> parts)
 {
     string builtInName = parts[0];
     if (builtins.Contains(builtInName))
@@ -106,14 +154,14 @@ bool ExecuteBuiltIn(string[] parts)
         switch (builtInName)
         {
             case "exit":
-                if (parts.Length > 1)
+                if (parts.Count > 1)
                 {
                     exitReturnCode = int.Parse(parts[1], CultureInfo.InvariantCulture);
                 }
                 shouldExit = true;
                 break;
             case "echo":
-                for (int i = 1; i < parts.Length; i++)
+                for (int i = 1; i < parts.Count; i++)
                 {
                     if (i > 1)
                     {
@@ -124,7 +172,7 @@ bool ExecuteBuiltIn(string[] parts)
                 Console.WriteLine();
                 break;
             case "type":
-                string? cmdName = parts.Length > 1 ? parts[1] : null;
+                string? cmdName = parts.Count > 1 ? parts[1] : null;
                 if (cmdName == null)
                 {
                     break;
@@ -139,14 +187,14 @@ bool ExecuteBuiltIn(string[] parts)
                 }
                 else
                 {
-                    Console.WriteLine($"{cmdName}: not found");
+                    Console.Error.WriteLine($"{cmdName}: not found");
                 }
                 break;
             case "pwd":
                 Console.WriteLine(Environment.GetEnvironmentVariable("PWD"));
                 break;
             case "cd":
-                string? dirName = parts.Length > 1 ? parts[1] : null;
+                string? dirName = parts.Count > 1 ? parts[1] : null;
                 if (dirName == null)
                 {
                     break;
@@ -163,7 +211,7 @@ bool ExecuteBuiltIn(string[] parts)
                 }
                 else
                 {
-                    Console.WriteLine($"cd: {dirName}: No such file or directory");
+                    Console.Error.WriteLine($"cd: {dirName}: No such file or directory");
                 }
                 break;
             default:
@@ -177,7 +225,7 @@ bool ExecuteBuiltIn(string[] parts)
     }
 }
 
-bool ExecuteProgram(string[] parts)
+bool ExecuteProgram(List<string> parts)
 {
     string cmd = parts[0];
     if (SearchPath(cmd, out string? foundAt))
