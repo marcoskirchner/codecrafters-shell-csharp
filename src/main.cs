@@ -233,7 +233,8 @@ bool ExecuteProgram(List<string> parts)
         string fullCmd = Path.Combine(foundAt, cmd);
         ProcessStartInfo processStartInfo = new(fullCmd, parts.Skip(1))
         {
-            RedirectStandardOutput = true
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
         };
         Process? p = Process.Start(processStartInfo);
         if (p != null)
@@ -241,6 +242,8 @@ bool ExecuteProgram(List<string> parts)
             p.WaitForExit();
             string output = p.StandardOutput.ReadToEnd();
             Console.Write(output);
+            string error = p.StandardError.ReadToEnd();
+            Console.Error.Write(error);
             return true;
         }
     }
